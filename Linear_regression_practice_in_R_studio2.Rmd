@@ -1,0 +1,677 @@
+---
+title: "Linear_regression_practice"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+always_allow_html: true
+---
+
+###Make sure to save this file with '\_' in-between words instead of standard spaces ' ', because R cannot read spaces.
+
+**Linear regression** is
+
+a statistical and machine learning method to model the relationship between a dependent variable and one or more independent variables by fitting the data to a straight line (or plane/hyperpla\
+ne) to make predictions, finding the line that minimizes errors between predicted and actual values, using the equation
+
+[𝑌=𝑎+bX for simple cases where 𝑌 (Y\^cap) is predicted from X.]{.underline}
+
+$$\hat{Y_i}=a+bX_i$$ It's fundamental for understanding how changes in input variables (predictors) affect an output (target) and is used for forecasting, like predicting sales from advertising spend or performance from study hours.
+
+In this markdown we are going to make a Linear regression model using the inbuilt *mtcars* sample dataset in R studio:-
+
+First, let's load the packages that will be needed
+
+```{r}
+library(tidyverse)
+library(equatiomatic)
+library(psych)
+```
+
+We will be working with the `mtcars` sample dataset that comes pre-loaded within R-studio
+
+```{r}
+mtcars
+```
+
+```{r}
+describe(mtcars)
+```
+
+Our dataset has many variables. **Let's create a linear model to understand how Weight (*wt*) of the vehicle affects the milage (*mpg*):**
+
+-   In R, the Response variable (a.k.a the dependent variable) is written on the left side of the formula sign '\~'. The Predictor variables(s) (a.k.a Independent variables, such as weight and/or horsepower) is/are written on the right of the '\~' sign:
+
+-   In our case we are using just a single predictor variable (weight), to predict the response variable (milage). The resulting formula, called the ***Linear function***, is denoted as:
+
+    $\hat{Y_i} = {a+bX_i}$
+
+-   Where,
+
+    -   $a$= **Intercept** of the regression line at Y-axis
+
+    -   $b$ = **slope** for variable X
+
+-   The linear model can be created using the `lm()` function in R.
+
+```{r}
+mtcars_lm <- lm(mpg ~ wt,mtcars) # Formula for linear regression is [y= a+ bx]
+```
+
+Once the linear model is created, the statistical parameters of the model can be called using the
+
+`summary()` function.
+
+```{r}
+summary(mtcars_lm)
+```
+
+The accuracy of a regression model is gauged by two main output parameters:
+
+-   Standard error (S.E)
+-   adjusted $R^2$ value
+
+\- A model with higher adj$R^2$ and lower **S.E** is considered superior.
+
+\- Both the parameters are determined by the number of predictor variables fed in the model, their exponents (if any) ; as well as the values of the variables.
+
+The equation (Linear function) corresponding to our model can be printed via '`equatiomatic::preview_eq()`
+
+function. The output will be a LaTeX formatted equation displayed in the Viewer pane.
+
+```{r}
+preview_eq(mtcars_lm)
+```
+
+**Linear regression relies on key assumptions** for valid results: a **linear relationship** between variables, **independent errors**, **homoscedasticity** (constant error variance), **normality of residuals**, and **no multicollinearity** among predictors, ensuring reliable predictions and coefficient interpretation. Violations can lead to biased estimates, making these assumptions crucial for accurate analysis.
+
+A model must fulfill these assumptions to make satitistically sound and overall accurate predictions of the response variable (Milage).
+
+**Model assesment and diagnosis**: To assess the fit of the datapoints (of our selected variables) in the model, and to test whether the model deviates from any of the pre-requisite assumptions of linear regression,the `plot()` function in R allows us to create 4 main *Diagnostic plots,* which provide a visual summary of the fit of various aspects of the model:
+
+1)  ) `Residuals v/s fitted values plot:`
+    -   Checks the assumption of linearity and homoscedasity
+
+    -   The plot displays the ***residuals*** *(the differences between observed and predicted values)* on the y-axis against the ***fitted*** *(predicted)* values on the x-axis.
+
+    -   For a good linear model, the points should be randomly scattered around the horizontal dashed line at zero, forming a horizontal band with no distinct pattern.
+
+    -   The plot in the image shows a distinct **U-shaped or curved red line** (a locally weighted scatterplot smoothing line, or `lowess` line, fitted to the residuals), which deviates significantly from the horizontal zero line. This pattern indicates a violation of the **linearity assumption**, suggesting that a simple linear model is not appropriate for the data and a non-linear relationship (e.g., a quadratic term) might be better suited.
+2)  ) `Normal Q-Q (Quantile-Quantile) Plot:`
+    -   This plot is a diagnostic tool used to assess whether the **residuals are normally distributed.**
+
+    -   The Q-Q plot compares the distribution of the standardized residuals (y-axis, "Standardized residuals") against an ideal normal distribution (x-axis, "Theoretical Quantiles").
+
+    -   If the residuals are perfectly normally distributed, the points should lie exactly along the dashed diagonal line
+
+    -   The points in our plot generally follow the line, but there are significant deviations, particularly at the tails (the high and low ends). The points at the top right, corresponding to the "Chrysler Imperial" and "Fiat 128" vehicles, curve above the line, indicating that the observed residuals in the upper tail are larger than expected in a perfect normal distribution.
+
+    -   This pattern suggests a violation of the **normality assumption** for the residuals, which means the model's predictions might not be reliable, especially for extreme values
+3)  ) **`Scale-Location plot`**`(also known as a Spread-Location plot):`
+    -   This plot is primarily used to assess the regression assumption of **homoscedasticity** (constant variance of residuals)
+
+    -   The plot displays the fitted (predicted) values on the x-axis and the square root of the standardized residuals √𝑆𝑡𝑎𝑛𝑑𝑎𝑟𝑑𝑖𝑧𝑒𝑑𝑅𝑒𝑠𝑖𝑑𝑢𝑎𝑙𝑠 on the y-axis. Taking the square root helps to spread out the points and makes patterns of non-constant variance (heteroscedasticity) easier to spot.
+
+    -    In an ideal model with constant variance, the points should form a horizontal band of randomly scattered points, and the red smooth line (a `lowess` line) should be roughly horizontal and close to zero.
+
+    -   In this specific plot, the red line is **not horizontal**; it curves downward in the middle. Furthermore, the vertical spread of the points changes across the range of fitted values. This non-random pattern indicates a violation of the homoscedasticity assumption, meaning the variability of the residuals is not constant across all predicted values.
+4)  ) `Residuals vs Leverage plot:`
+    -   identifes **influential observations**—data points that have a disproportionate impact on the regression model's coefficients.
+
+    -   Ideally, Most points should be clustered near the center of the plot with low leverage
+
+        and small residuals.
+
+    -   #The **Chrysler Imperial** is located near the top right, indicating it has very high leverage (high weight relative to others) and a large positive residual. It sits close to or crosses the 0.5 Cook's distance line, making it a primary influential observation.
+
+    -   The presence of points like the Chrysler Imperial with a large Cook's distance suggests that removing or adjusting this single data point would significantly change the parameters of the `lm(mpg ~ wt)` regression model.
+
+```{r}
+plot(mtcars_lm)
+```
+
+Since our diagnostic plots are suggesting that the datapoints of our model are showing a non-linear distribution (in addition to having a few highly influential values, such as 'Chrysler Imperial'), the dataset can be improved by :
+
+1.) Removing the highly influential values (optional and not always recommended).
+
+2.) Try and fit a polynomial (exponent of predictor variable) dataset in the model, to account for any non-linearity in the data.
+
+Let's try removing the most influential datapoints (Chrysler Imperial,etc.) from the dataset and see how do the $R^2$ and S.E change.
+
+```{r}
+mtcars_modified <- mtcars %>%
+  filter(! rownames(.) %in% c('Chrysler Imperial','Fiat 128','Toyota Corolla'))
+
+mtcars_modified
+
+dim(mtcars_modified)
+
+```
+
+```{r}
+mtcars_lm_2 <- lm(mpg~wt,mtcars_modified)
+summary(mtcars_lm_2)
+```
+
+Removing the influential value did improve the the $R^2$ and **S.E.**
+
+However, since the weight of the Chrysler Imperial (and other two models) is a true measure (i.e less likely to be arbitrary and vague) it is best to keep such value in the dataset to make our model more robust for any similar outliers that it will encounter during the testing phase.
+
+Therefore, we will not use the modified dataset but instead we will be using the original mtcars data based linear model, in the subsequent analysis in this script, despite its lower $R^2$ and inflated S.E.
+
+```{r}
+plot(mtcars_lm_2)
+```
+
+The diagnostic plots of the modified linear model do report some improvement in the fit of the data points , however, the non-linearity in the distribution of the data points still needs to be addressed.
+
+Therefore, let's use our original `mtcars` data (instead of the modified `mtcars` data) and try to
+
+address the non-linearity (and thereby improve the model) by incorporating exponent values of the predictor variable (wt) in our regression model.
+
+Let's start by a second degree ($wt^2$) polynomial regression model.
+
+```{r}
+Poly_reg_mtcars <- lm(mpg~poly(wt,2),mtcars)  # formula for polynomial regression of 2nd degree is = > [y = y' + ax + b(x^2)] 
+summary(Poly_reg_mtcars)
+```
+
+Our second degree polynomial regression model is significantly better and more accurate than its linear predecessor, as evident by the increased $R^2$ and a deflated S.E.!
+
+Additionaly, it is important to know how does the linear function (equation) of a polynomial linear regression model look like:
+
+```{r}
+preview_eq(Poly_reg_mtcars)
+```
+
+In case if you're curious about how the polynomial model made with the modified mtcars would've looked like (only for demonstration):
+
+```{r}
+Poly_reg_mtcars_modified <- lm(mpg~poly(wt,2),mtcars_modified) 
+summary(Poly_reg_mtcars_modified)
+```
+
+Again, It is best not use a model based on the modified `mtcars` dataset (and, as mentioned before, we will not be dong so! ).
+
+Now, let's see whether increasing the exponent of the wt variable to third degree($wt^3$) will further improve our model or not?
+
+```{r}
+summary(lm(mpg~poly(wt,3),mtcars))
+```
+
+Increasing the exponent of wt variable to third degree, made the model worse (evident by its lower $R^2$ and inflated S.E,compared to the 2nd degree polynomial model). We'll therefore stick to the 2nd degree polynomial model.
+
+It is a common practise to plot the relationship between the Response and predictor variable(s).
+
+Let's use ggplot2 to graph this relationship:
+
+1.) Linear relationship (mpg\~wt)
+
+```{r}
+library(ggpubr)
+ggplot(mtcars,aes(wt,mpg))+
+  geom_point()+
+  geom_smooth(method='lm',se=TRUE)+ #by default the formula used is y=a+bx
+  stat_regline_equation(aes(label = after_stat(eq.label)),label.x = 4.5,label.y = 25) + # Adds the linear equation (linear function)
+  stat_cor(aes(label = after_stat(rr.label)), label.y = 38,label.x = 2.05 , color = "red") + #Adds the R^2 value
+  theme_minimal()+
+  coord_cartesian(ylim=c(0,40)) 
+```
+
+The same plot with marginal plots:
+
+```{r}
+library(ggExtra)
+p <-ggplot(mtcars,aes(wt,mpg))+
+  geom_point()+
+  geom_smooth(method='lm',se=TRUE)+
+  stat_regline_equation(aes(label = after_stat(eq.label)),label.x = 4.5,label.y = 25) + # Adds the linear equation (linear function)
+  stat_cor(aes(label = after_stat(rr.label)), label.y = 38,label.x = 2.05 , color = "red") + #Adds the R^2 value
+  theme_minimal()+
+  coord_cartesian(ylim=c(0,40)) 
+
+ggMarginal(p, type = "density", fill = "skyblue", col = "gray")
+```
+
+2.) The quadratic relationship (polynomial) can also be visualized (mpg\~$wt^2$)
+
+-   Make sure that the quadratic equation is explicity specified in the 'formula=' parameter of the `geom_smooth()` function.
+
+```{r}
+ggplot(mtcars, aes(wt,mpg))+
+  geom_point()+
+  geom_smooth(method = 'lm',formula = y~poly(x,2), color= 'yellow')+ #To make a polynomial regression model out of the data
+  stat_regline_equation(
+    aes(label =  paste(after_stat(eq.label), after_stat(rr.label), sep = "~~~~~")),
+    formula = y ~ poly(x, 2), 
+    label.x = 3.5, label.y = 30)+ #Adds the R^2 value as well as the linear function equation of the polynomial regression model
+  theme_minimal()
+```
+
+Optionally, I'm also plotting the graph for modified `mtcars` dataset
+
+```{r}
+ggplot(mtcars_modified,aes(wt,mpg))+
+  geom_point()+
+  geom_smooth(method='lm',se=TRUE)+
+  stat_regline_equation(aes(label = after_stat(eq.label)),label.x = 4.5,label.y = 25) + # Adds the linear equation (linear function)
+  stat_cor(aes(label = after_stat(rr.label)), label.y = 38,label.x = 4.05 , color = "red") + #Adds the R^2 value
+  theme_minimal()+
+  coord_cartesian(ylim=c(0,40)) 
+```
+
+The graphs shows a strong negative correlation (a negative slope value `r coefficients(mtcars_lm)[2]` )between mpg and wt (which is expected).
+
+```{r}
+ggplot(mtcars_modified,aes(wt,mpg))+
+  geom_point()+
+  geom_smooth(method = 'lm',formula = y~poly(x,2), color= 'yellow')+ #To make a polynomial regression model out of the data
+  stat_regline_equation(aes(label =  paste(after_stat(eq.label), after_stat(rr.label), sep = "~~~~~")),
+    formula = y ~ poly(x, 2), 
+    label.x = 3.5, label.y = 30)+ #Adds the R^2 value as well as the linear function equation of the polynomial regression model
+  theme_minimal()
+```
+
+```{r}
+cooks.distance(lm(mpg~poly(wt,2),mtcars_modified)) %>% sort(.,decreasing=TRUE) %>% as.data.frame()
+```
+
+R allows us to isolate specific attributes of the regression model via simple vector indexing '\$' :
+
+```{r}
+mtcars_lm$coefficients
+Poly_reg_mtcars$coefficients
+
+coefficients(mtcars_lm) # Alternatively, instead of the indexing,Specific function can also used. eg. `coefficients()` to isolate coefficients.
+
+
+
+mtcars_lm$residuals
+Poly_reg_mtcars$residuals
+
+residuals(mtcars_lm) # to isolate residuals. Please read about residuals.
+
+
+
+mtcars_lm$effects
+Poly_reg_mtcars$effects
+
+
+
+mtcars_lm$fitted.values
+Poly_reg_mtcars$fitted.values
+
+fitted.values(mtcars_lm) # to isolate fitted values (predicted values)
+
+
+```
+
+```{r}
+predict(mtcars_lm)# `predict()` also isolates the fitted values.
+predict(Poly_reg_mtcars)
+```
+
+```{r  Isoalting specific parameters/numbers from the summary of the model}
+
+# adjusted R^2 - > always consider adjusted R^2 over regular R^2
+(summary(mtcars_lm))$adj.r.squared
+#F-statistics 
+(summary(mtcars_lm))$fstatistic
+# Just the F-value from F-statsitics
+(summary(mtcars_lm))$fstatistic[1]
+
+
+# The standard error (sigma)
+(summary(mtcars_lm))$sigma
+# S.E using specialized function `sigma()` on the model itself.
+sigma(mtcars_lm)
+
+# or simply use 'broom::glance()'
+library(broom)
+glance(mtcars_lm)
+
+#for p-value
+glance(mtcars_lm)$p.value
+
+```
+
+We can isolate different statistical parameters and aspects of the model into a vector or table form to make insightful plots and draw valuable conclusions about the model (we'll see how, later in this script).
+
+**Now, let's move forward and make a regression model which is based on two Predictor variables:**
+
+```{r}
+New_mtcars_lm <- lm(mpg~ wt+gear, mtcars) # Combination no 1 -> 0.77 R^2 +  S.E = 5.09
+summary(New_mtcars_lm)
+```
+
+```{r}
+
+New_mtcars_lm <- lm(mpg~ wt+disp, mtcars) # Combination no 1 -> 0.765 R^2 + S.E = 2.164
+summary(New_mtcars_lm)
+```
+
+```{r}
+New_mtcars_lm <- lm(mpg~ wt+cyl, mtcars) # Combination no :2 -> 0.818 R^2+  S.E = 1.715
+summary(New_mtcars_lm)
+```
+
+```{r}
+New_mtcars_lm <- lm(mpg~ wt+hp, mtcars) # Combination no :3 -> 0.814 R^2 +  S.E= 1.59
+summary(New_mtcars_lm)
+```
+
+```{r}
+New_mtcars_lm <- lm(mpg~ wt+vs, mtcars) # Combination no :4 -> 0.787 R^2 &  2.355 S.E
+summary(New_mtcars_lm)
+```
+
+```{r}
+New_mtcars_lm <- lm(mpg~ wt+carb, mtcars) # Combination no :5 -> 0.778 R^2 & 1.76 S.E
+summary(New_mtcars_lm)
+```
+
+Based on the $R^2$ and S.E values of the above **bivariate** combinations; wt, hp, and cyl variables explain the variance in mpg much more precisely than other variables in the dataset.
+
+It is rational to create a **trivariate model** using 'wt', 'cyl', and 'hp' and see how well it performs compared to our previous models.
+
+```{r}
+New_mtcars_lm <- lm(mpg~ wt+cyl+hp, mtcars) # Combination no :6 -> a Multivariate (3 predictor variables) linear model, with a high 0.826 adj-R^2 & a low 1.78 S.E
+summary(New_mtcars_lm)
+```
+
+Renaming the multivariate model:
+
+```{r}
+Multivariate_mtcars_lm <- New_mtcars_lm
+summary(Multivariate_mtcars_lm)
+```
+
+What does the linear function equation of a trivariate regression model look like ?:
+
+```{r}
+preview_eq(Multivariate_mtcars_lm)
+```
+
+After some **exploratory analysis** of our trivariate model it was observed that ,when the same trivariate model was transformed into a polynomial trivariate model (mpg\~wt^2^ + hp^2^ + cyl^2^ )
+
+the R\^2 dropped and S.E inflated.
+
+we therefore should restrict our multivariate model to only two predictor variables (wt and hp) in their 2nd degree polynomial form. Note our model still performs comparatively better than the previous models.
+
+```{r}
+Poly_multivariate_mtcars_lm <- lm(mpg~poly(wt,2)+poly(hp,2),mtcars) # Two of the three varibales fit better in the model with their second degree exponents (the adjusted R^2 for this model is 0.8745 and a has low 0.3774). The cyl variable was removed because it brought the R^2 down and increased the S.E.
+summary(Poly_multivariate_mtcars_lm)
+```
+
+As more predictor variables are added into the model, the linear function also becomes more complex.
+
+```{r}
+preview_eq(Poly_multivariate_mtcars_lm)
+```
+
+Let's plot the 4 main diagnostic plots with this second-degree-multivariate-linear-regression model, to asses its accuracy and predicatibility.
+
+```{r}
+plot(Poly_multivariate_mtcars_lm)
+```
+
+The diagnostic plots reveal that our model fits much better now, however some non-linearity still lingers.
+
+Since, the model is statistically sufficiently accurate now, let's use this model to predict the milage(mpg) of cars from a given(test) set of values and see the output.
+
+The wt and hp values in the 'TEST_wt_values' list vector are made-up, just to test the model. **Infact the whole purpose of a regression model is to predict the response variable values based off of real world values,which are often arbitrary and different than the training data that was used to construct the model.**
+
+The `predict()` function is used to read and feed these test values into our model, using its
+
+'newdata=' parameter.
+
+```{r}
+TEST_wt_values <- list(wt=c(2.4,3.6,1.5),hp=c(114,230,200))
+predict(Poly_multivariate_mtcars_lm, newdata = TEST_wt_values)
+```
+
+Now let's visualise the quadratic (2nd degree) relationship of wt and hp variables with the mpg variable, using simple scatterplot graphs. Since both wt and hp variables are in different ranges, it is important to facet the graph into two different juxtaposed graphs, each showing the relationship (regression curve) of either wt^2^ or hp\^2 at separate x-axes against mpg at the comon y-axis.
+
+```{r}
+library(patchwork) # For combining plots
+
+# 1. Curve for Weight (holding hp constant)
+plot_wt <- ggplot(mtcars, aes(wt, mpg)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "blue") +
+  labs(title = "Effect of Weight (poly 2)", subtitle = "Holding HP constant") +
+  theme_minimal()
+
+# 2. Curve for Horsepower (holding wt constant)
+plot_hp <- ggplot(mtcars, aes(hp, mpg)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red") +
+  labs(title = "Effect of Horsepower (poly 2)", subtitle = "Holding Weight constant") +
+  theme_minimal()
+
+# Combine them
+plot_wt + plot_hp
+
+```
+
+Since our model has two continuous predictors, the "curves" actually form a curved 3D surface. We can visualize this using the plotly package.
+
+```{r}
+library(plotly)
+
+# Create a grid of values for wt and hp
+wt_seq <- seq(min(mtcars$wt), max(mtcars$wt), length.out = 30)
+hp_seq <- seq(min(mtcars$hp), max(mtcars$hp), length.out = 30)
+grid <- expand.grid(wt = wt_seq, hp = hp_seq)
+
+# Predict mpg for the grid using your model
+grid$mpg <- predict(Poly_multivariate_mtcars_lm, newdata = grid)
+
+# Reshape for 3D plotting
+z_matrix <- matrix(grid$mpg, nrow = 30, ncol = 30)
+
+# Generate interactive 3D plot
+plot_ly(x = ~hp_seq, y = ~wt_seq, z = ~z_matrix) %>% 
+  add_surface() %>%
+  layout(scene = list(xaxis = list(title = 'Horsepower'),
+                      yaxis = list(title = 'Weight'),
+                      zaxis = list(title = 'MPG')))
+
+```
+
+In reality the milage of a car is determined by many variables such as wt, cyl, hp, disp ,carb,etc. all of which have great degree of correlation with milage (either positive or negative), this phenomena is called **Multicolinearity** in statistics.
+
+While making a regression model it is sometimes important to asses the effect (relation) of only one of these variables on our response variable.This can be achieved by making partial regression plots. PR plots filter out multicolinearity (by statistically muting the effects of all other variables) to show the relationship of a chosen/desired predictor variable with the response variable.
+
+**Partial regression plot**, a.k.a **Added-variable plots** ,help us finding out the contribution of each predictor variable individually to the overall accuracy of the multivariate model.
+
+A PR-plot for a multivariate model is a graph between the residuals of the response variable (adjusted for all other variables) and the residuals of each predictor variable included in the model (Separately-that are also adjusted for all other variables).
+
+In Partial regression plots the regression line displays the **effect of** **only one predictor variable at a time against the response variable**. A visual comparison of these graphs of a multivariate model can reveal to what extent does a predictor variable alone contributes in the overall accuracy of the model:
+
+`car::avPlots()` function can plot all the PR-plots of a multivariate model.
+
+```{r}
+library(car)
+avPlots(lm(mpg~poly(wt,2)+poly(hp,2),mtcars))
+```
+
+The PR-curves above indicate that both wt and hp are negatively correlated with mpg (downward slopes in both the left graphs) i.e as weight or horsepower increase milage will decrease, however this relationship is not linear but curvilinear (quadratic here) and the resulting regression line for wt^2^ and/or hp\^2 will be curved (u-shaped) based on the ranges of both variables. This is represented by the positive slope in the two right hand side graphs, which suggests that although milage will decrease with increase in wt/hp, the rate of decrease will be diffferent as we move towards the heavier vehicle (or with higher horsepower) mentioned in this dataset (this trend may not hold true in real life).
+
+PR-graphs for a polynomial trivariate model (wt+hp+cyl). The following graphs explain why cyl^2^ led to a decrease in R-squared value- i.e it does not adapt to the u-shaped curve as second degree polynomial variable.It also does not seem to correlate well with mpg linearly:
+
+```{r}
+avPlots(lm(mpg~poly(wt,2)+poly(hp,2)+poly(cyl,2),mtcars))
+```
+
+Let's try to make another polynomial trivariate model using 'disp' instead of 'cyl'.
+
+It turns out that, including disp^3^ increased the adj R^2,^ indicating an S-shaped inflection point in the regression curve of mpg\~disp\^3.Moreover Increasing the exponent to 5th degree further increased the adjusted R-value (while maintaining a low S.E) ,this shows how complex the curvilinear trend is, in this dataset.
+
+```{r}
+avPlots(lm(mpg~poly(wt,2)+poly(hp,2)+poly(cyl,2),mtcars))
+```
+
+```{r}
+summary(lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,5),mtcars))
+```
+
+```{r}
+avPlots(lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,5),mtcars))
+```
+
+```{r}
+avPlots(lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,5),mtcars))
+```
+
+The complex curvilinear relationship between mpg and disp\^5 can be visualized by a simple scatter plot.
+
+```{r}
+mpg_to_disp_fitted <- fitted(lm(mpg~poly(disp,5),mtcars))
+ggplot(mtcars,aes(disp,mpg))+
+  geom_point()+
+  geom_smooth(method= 'lm', formula= y~poly(x,5), se = TRUE)+
+  theme_classic()+
+geom_segment(aes(yend= mpg_to_disp_fitted))
+```
+
+A good model is the one which is based on those predictor variables in the dataset that are minimaly colinear as a high multicolinearity in the model will inflate error substantially.
+
+One must test their model for multicolinearity. There are two main approaches to detect multicolinearity in a linear regression model:
+
+1.) Making correlation plots and keeping an eye on highly correlated variables (\>0.7)
+
+2.) By calculating Variance-inflation factor score of all the predictor variables involved in the model.
+
+-   Making a correlation plot is easy in R ( using ggplot or via dedicated packages suchas corrplot):
+
+```{r}
+#Correplation plot using Corrplot package :-
+library(corrplot)
+corrplot(cor(mtcars),method='color',
+         type = 'lower',
+         title = 'Correlation matrix plot for mtcars dataset',
+        outline= F,
+        order= 'hclust',
+        hclust='ward',
+        tl.col = 'black',
+        tl.srt = 90,
+        cl.cex = 0.9,
+        addCoefasPercent = TRUE,
+        addCoef.col = TRUE)
+
+ #Correlation plot usign ggplot:-
+ mtcars_cor <-cor(mtcars) %>% #calculating correlation first
+   as.data.frame() %>% 
+rownames_to_column() %>% 
+   pivot_longer(.,-rowname) #for making the correlation matrix into long format
+ 
+mtcars_cor %>% 
+  ggplot(aes(x=rowname,y= name,fill=value))+
+  geom_tile()+
+  geom_text(aes(label= (round(value,2)*100)),size = 3,colour= '#1D2B64')+
+  theme_minimal()+
+  theme(legend.title = element_text(face = "bold",vjust = 2.5 ),
+        plot.title = element_text(face = 'bold', hjust = 0.55),
+        axis.text = element_text(face = 'bold'))+
+  scale_fill_gradient2(name = 'Pearson\nCorr.\nvalue', low = '#A6FFCB',mid ='#12D8FA' ,high = '#1FA2FF',midpoint= 0)+
+  labs(title= 'Correlation matrix plot for the mtcars sample dataset',
+       x= 'Metric', y= 'Metric')
+```
+
+As you can see, variables that are highly positively correlated(positively collinear), include, cyl-disp; drat-gear; drat-am; disp-hp ; wt-disp ; wt-hp.
+
+Similarly, varibales that are inversely correlated(negatively collinear), include,
+
+mpg-cyl; mpg-disp; mpg-wt; vs-cyl.
+
+It is imperative to avoid including these variables together in a model to avoid introducing unwanted inflated errors in our predictions.
+
+If you look at the variables in our model some of them are colinear (for instance wt-disp). Not only that, these variables are present in polynomial forms which further increases the risk of inflation of errors. Inclusion of these variables in our model must be reconsidered.
+
+Let's test the VIF of all the variables in every model that we've made so far and look at the effect of multicolinearity on these models.
+
+`car::vif()`function can calculate the VIF of any lm model.
+
+```{r}
+library(car)
+#model1
+car::vif(lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,5)+cyl,mtcars))
+#model 2 (current model)
+vif(lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,5),mtcars))
+#model3
+vif(lm(mpg~poly(wt,2)+poly(hp,2)+disp,mtcars))
+#model4
+vif(lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,5)+ poly(drat,1),mtcars))
+
+```
+
+$GVIF^{(1/(2.Df)}$ values of certain variables are reaching or crossing 3. Which is concerning.
+
+Presence of collinear variables (such as wt with cyl ) inflates the VIF of both the variables, effectively making the model more error prone.
+
+**In our current model(Model no 2), wt and disp are the only two colinear variables due to which the VIF of wt is substantially high.**
+
+a GVIF(1/(2.Df) of 2.9 shows severe multicolinearity in the model .
+
+How does multicolinearity affect the model?
+
+The coefficients that the model is going to display (SE and or R-squared,etc.) are not reliable and accurate. However, the predicting power of the model does not change.
+
+We can either keep the model as it is or remove the disp variable to bring down the VIF of wt. However retaining the disp variable is justified due to following reasons:
+
+-   disp (poly) is able to explain substantial amount of non-linear distribution of data points in the model which consequently increases the $R^2$ while keeping the S.E low. Without disp, the model will be missing key information about the non-linearity present in the dataset which will ultimately bring down the $R^2$ and inflate the S.E anyway.
+
+-   Making the disp as a 2nd or 3rd degree polynomial in the model might decreases some of the inflated VIF in wt (although it will also affect $R^2$ ,but to a much lesser degree)- see VIF of model no: 3.
+
+In our effort to create a suitable model for predicting the milage of any car (based on the car models included in the mtcars dataset), we have arrived at a conjecture where we do not know which linear regression model is a better choice (the model with only wt and hp or the one with wt+hp+disp).
+
+Data analysts encounter such problems quite often while developing a model;or maybe sometimes they just want to know whether including certain predictor variable(s) in a model will answer certain question about the dataset;
+
+-   for instance, if we make a model having two variables -education+Hours working-from the employee data of a firm to predict how often do people with high educational qualification and working endurance get promoted.
+
+The model 'lm\~edu+hours' will give an adj-$R^2$ value. Now if addition of two other variables-sex+race- increases the $R^2$ and improves all other diagnostic metrics of the model, then it would become clear that sex and race also play some role in deciding who gets promoted !- this would be suggestive of the implicit or explicit discreminatory practise(s) being followed in that firm. That's how data reveals patterns that could never have been observed otherwise.
+
+Making a call on which model is best we need to perfom an **F-change test (partial F-test)**.
+
+An **F-Change Test** (or Partial F-Test) in regression determines if adding new variables significantly improves a model's predictive power, comparing a "full" model to a "reduced" (simpler) model. This is called called Hierarchical multiple regression.
+
+-   In our case, 'lm\~ wt+hp' is the **reduced model** which needs to be compared with a **full model** i.e 'lm\~wt+hp+disp'.
+
+-   F-change test includes calculating F statistics between the two models (i.e Anova). A resulting p-value \<0.05 would indicate that the fuller model is indeed a better model with significantly better predicting power.
+
+-   If the model is significantly better, the extent of improvement can be estimated by simply subtracting the adj-$R^2$ of the reduced-model from the $R^2$ of the Full-model.
+
+Let's see how do our models compare:
+
+```{r F-change test }
+      Model_reduced <- lm(mpg~poly(wt,2)+poly(hp,2),mtcars)
+      Model_Full_1 <- lm(mpg~poly(wt,2)+poly(hp,2)+disp,mtcars)
+      Model_Full_2 <- lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,3),mtcars)
+      Model_Full_3 <- lm(mpg~poly(wt,2)+poly(hp,2)+poly(disp,5),mtcars)
+```
+
+```{r}
+#Comparison between reduced model and Full model 1
+    anova(Model_reduced,Model_Full_1) #note,`anova()` is different than `aov()`.
+    #Comparison between reduced model and Full model 2
+    anova(Model_reduced,Model_Full_2)
+    #Comparison between reduced model and Full model 3
+    anova(Model_reduced,Model_Full_3)
+```
+
+The F-change test shows that adding disp into the model does not significantly increase its predictive power. And from the VIF scores it was clear that adding disp was introducing severe levels of multicolinearity in the model.
+
+The F-change test suggests that the increase in $R^2$ of the full model(`r (summary(Model_Full_3))$adj.r.squared`) compared to the reduced model (`r (summary(Model_reduced))$adj.r.squared`) is not significant (though it seems like a significant increase). Again, the small increase seems to be because of a better fit for non-linearity in the dataset. There are scenarios where a model might fail the F-change test though.
+
+The Full model might have failed the F-change test because of a small sample size in mtcars dataset or due to multicolinearity in the model (which degrades the power of the F change test).
+
+Neverthless, the predictive power of the Full model is still entact (infact it is slightly better than the reduced model because of a slightly higher adjusted- $R^2$ value - telling us that disp does seem to improve the model, perhaps by describing the non-linearity in the dataset.
+
+CONCLUSION:
+
+The **Full-model wins** for real world application for **predictions.**
+
+![](images/clipboard-4226472319.png)
+
+—————————————–——THE END------------------------------------
