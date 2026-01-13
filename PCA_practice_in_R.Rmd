@@ -1,0 +1,186 @@
+---
+title: "PCA using iris sample dataset"
+output: 
+  html_document:
+    code_folding: show
+    theme: "cerulean"
+  
+date: "2026-01-13"
+---
+
+# ***PCA(Principal Component Analysis):***
+
+## In R-studio
+
+### -Practice
+
+> Principal Component Analysis (PCA) is a ***dimensionality reduction technique that transforms high-dimensional, often correlated, data into a smaller set of uncorrelated variables called principal components, capturing the most significant variance (information) from the original data.*** It simplifies complex datasets by finding underlying patterns, making them easier to visualize, analyze, and use in machine learning by reducing computational load and avoiding issues like multicollinearity.
+
+### It is extensively used in lifesciences for:
+
+#### 1.) High-throughput data (Multi-omics data)
+
+#### 2.) Multi-dimensional data (e.g Various factors affecting lifespan of a cohort of individuals)
+
+```{r include=FALSE}
+library(tidyverse)
+
+```
+
+We'll be using **iris** sample dataset.
+
+```{r Practice dataset for PCA}
+glimpse(iris)
+```
+
+PCA requires variants as continuous data. Any categorical variant (here, iris\$Species) therefore has to be removed/separated.
+
+```{r Subsetting data for PCA}
+
+iris_for_PCA <- iris[,1:4] # iris data subset without the Species (catagorical variant column)
+iris_species <-iris[,5]# Species column alone
+iris_for_PCA
+```
+
+**`prcomp()` carries out the PCA in R.**
+
+```{r Carry out the PCA}
+PCA_result <- prcomp(iris_for_PCA, scale = TRUE) # Scaling (normalising) the values is important
+PCA_result
+```
+
+Look at the summary of PCA results: The summary report of the PCA output shows
+
+1.) Standard deviation of the Principle components.
+
+2.) Proportion of Variance (Since PCs are ranked, the PC1 always has highest variance).
+
+3.) Cumulative proportion (Again, PC1 encomapasses (explains) highest variance of the dataset).
+
+```{r PCA result summary}
+
+PCA_result_summary<- summary(PCA_result)
+PCA_result_summary 
+```
+
+As you can see the standard deviation values in the PCA output correspond to the Principal components themselves (and not the the variables present in the dataset itself).
+
+For comparison:
+
+```{r Comparison of St.devs of PCA v/s the original dataset}
+sapply(iris_for_PCA,sd,na.rm = TRUE) # St.Dev of the iris dataset.
+PCA_result$sdev # St.Dev of the Principal components.
+```
+
+Following components are yielded, St.devs of the PC as well as the original dataset, loading values, center values, PC values for each variable, x.
+
+```{r Isolating different components of PCA results }
+
+PCA_result$sdev # St. dev of Principal components.
+PCA_result$rotation # Eigenvector values/ loading values.
+PCA_result$center # Mean values wich were used to center the data.
+PCA_result$scale # St.dev of each of the original variables in iris dataset.
+PCA_result$x # PC-Scores(coordinates) for each PC,calculated after PCA.These values are required for plots.
+```
+
+If you noticed, the number of Principal components is the same as the number of variables in the original dataset.
+
+Let's see which ones among the four PCs explain the most amount of variance in our dataset ;and for that we'll make scree plots.
+
+Scree plots in Principal Component Analysis (PCA) in R are used primarily as a **visual aid to determine the optimal number of principal components (PCs) to retain** for further analysis or dimensionality reduction. This decision is crucial because it allows the data analyst to focus on the components that explain the most significant amount of the total variance in the data, while potentially discarding components that represent only noise.
+
+#### SCREE PLOTS for our PCA analysis result:
+
+```{r SCREE plot in base R}
+#SCREE plot in base R
+plot(PCA_result$sdev^2, type = "b", 
+          xlab = "Principal Component", 
+          ylab = "Variance (Eigenvalue)",
+          main = "Scree Plot for Iris PCA",
+          col = "blue", pch = 16)
+
+```
+
+```{r SCREE plot using ggplot}
+#PCA-SCREE plot using ggplot:
+Var_PCA <-PCA_result$sdev^2
+Var_PCA
+Var_PCA_percent <- (Var_PCA/sum(Var_PCA))*100
+Var_PCA_percent
+ 
+
+PCA_ggplot <- data.frame(PC= paste0('PC',1:4),Variance = Var_PCA_percent)
+PCA_ggplot
+
+
+ggplot(PCA_ggplot, aes(x=PC,y=Variance))+
+  geom_bar(stat = 'identity', fill= '#DDD156', fill= 'black')+
+  theme_bw()+
+  ylab('Variance(%)')
+```
+
+The Cumulative variance (in PCA summary results) as well as the SCREE plot reveal that most of the variance in the iris dataset is captured by the first two PCs (PC1- 72% and PC2-22%). For the subsequent analysis the contribution of PC3 and PC4 can be ignored.
+
+Let's see what does the 92% variance captured by PCA reveal,by making PCA plots.
+
+```{r PCA plots using factoextra package}
+# Main PCA plot-using 'factoextra' package.
+library(factoextra)
+  
+
+
+  #Individual plot(Samples)
+  fviz_pca_ind(PCA_result,
+             geom.ind = "point",      # Show points only
+             col.ind = iris$Species,   # Color by species groups
+             palette = "jco",          # Use a professional color palette
+             addEllipses = TRUE,       # Add confidence ellipses
+             legend.title = "Species")
+  
+  
+  
+  #Variable plot(Loadings)
+  fviz_pca_var(PCA_result,
+               col.var = "contrib",     # Color by contribution to the PC
+               gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+               repel = TRUE)            # Avoid overlapping text)
+  
+  
+  
+  #Biplot(Sample+Loading values combined)
+  fviz_pca_biplot(PCA_result, 
+                  repel = TRUE,
+                  col.ind = iris$Species, 
+                  palette = "npg",
+                  addEllipses = TRUE,
+                  label = "var",        # Only label variables, not every point
+                  col.var = "black")
+  
+```
+
+```{r PCA plot(PC1 vs PC2) using ggplot}
+
+# in ggplot
+  scores <- as.data.frame(PCA_result$x)
+  New_iris <- as.data.frame(iris)
+  
+  ggplot(scores, aes(PC1,PC2,color = iris$Species)) +
+    geom_point(shape= iris$Species)+
+    theme_bw()+
+    stat_ellipse(aes(fill = iris$Species), geom = "polygon", alpha = 0.1)+
+    labs(title="PCA plot for iris sample dataset",
+         color = 'Species',
+         fill= 'Species')
+```
+
+### **Conclusion:**
+
+The PCA plots revealed that, regardless of the Species;Petal length, Petal width and Sepal length are positively correlated (their arrows make an acute angle i.e. \<90' angle). Sepal width, on the contrary, is not correlated to all other two variables (evident by an obtuse angle between Sepal width and all other variables).
+
+Importantly, a greater horizontal distance (along x axis) between coordinates of Setosa and two other species (Versicolor and Virginica) shows how the dimensions of sepals and petals of Setosa species are markedly unrelated/different than the dimensions of petal and sepals of other species.
+
+Dimensions of Petals and sepals of the Species- Versicolor and Virginica are related.
+
+These insights could've been gained by comparing the variants in the iris data set by making pairwise plots of different kinds. But doing so will be cumbersome, and impractical especially if the data had even higher number of variants (dimensions),- for instance, expression values of thousands of genes in different organs/cell types of a organism. Additionally, few insights could not have been revealed by these pair-wise plots.
+
+This is where PCA shines, it reduces the number of variants in a dataset into just few Principal components (here PC1 and PC2), which are easy to plot in a single 2D graph, all the while capturing the variance of all the datapoints and laying them out into distinct clusters, revealing new and oscured patterns and insights in our data.
