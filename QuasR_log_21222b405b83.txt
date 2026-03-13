@@ -1,7 +1,0 @@
-[2026-03-11 16:56:02 UTC] (hmsubuntu@pid23847/Astral) (Task 1/1): Number of threads available: 1
-[2026-03-11 16:56:02 UTC] (hmsubuntu@pid23847/Astral)  - Executing hisat2 using 1 cores. Parameters:
-[2026-03-11 16:56:02 UTC] (hmsubuntu@pid23847/Astral)    '/home/hmsubuntu/Documents/Rstudio/chr7_new.fa.Rhisat2/hisat2Index' '/home/hmsubuntu/Downloads/sampledActin.fq' -k 2 --phred33 -p 1 -S '/tmp/RtmpGbxwKX/sampledActin.fq5d2764a12f68.sam.tmp' --no-spliced-alignment
-[2026-03-11 16:56:02 UTC] (hmsubuntu@pid23847/Astral)    Number of filtered secondary alignments:0
-[2026-03-11 16:56:02 UTC] (hmsubuntu@pid23847/Astral)    Number of filtered overmapped alignments:0
-[2026-03-11 16:56:02 UTC] (hmsubuntu@pid23847/Astral) (Task 1/1): Converting sam file to sorted bam file:/tmp/RtmpGbxwKX/sampledActin.fq5d2764a12f68.sam
-[2026-03-11 16:56:03 UTC] (hmsubuntu@pid23847/Astral) (Task 1/1): Genomic alignments have been successfully created.
